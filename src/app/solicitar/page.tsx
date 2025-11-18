@@ -1,11 +1,12 @@
 // src/app/solicitar/page.tsx
 
-'use client';
+'use client'; // Este componente necesita interactividad en el navegador
 
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function SolicitarPage() {
+// Componente del formulario con toda la lógica
+function SolicitarForm() {
   const searchParams = useSearchParams();
   const servicioInicial = searchParams.get('servicio') || '';
 
@@ -18,7 +19,7 @@ export default function SolicitarPage() {
     urgencia: 'normal',
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Nuevo estado para el botón
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setFormData(prev => ({ ...prev, servicio: servicioInicial }));
@@ -37,10 +38,9 @@ export default function SolicitarPage() {
     }
   };
 
-  // Función actualizada para enviar datos a la API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true); // Mostrar estado de carga
+    setIsLoading(true);
 
     try {
       const response = await fetch('/api/solicitudes', {
@@ -48,7 +48,7 @@ export default function SolicitarPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData), // Enviamos los datos del formulario
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -59,7 +59,6 @@ export default function SolicitarPage() {
       alert('¡Solicitud enviada con éxito! Un profesional VIP te contactará pronto.');
       console.log('Respuesta del servidor:', result);
 
-      // Limpiar el formulario después de enviar
       setFormData({
         servicio: '',
         descripcion: '',
@@ -74,7 +73,7 @@ export default function SolicitarPage() {
       console.error('Error:', error);
       alert('Hubo un problema al enviar tu solicitud. Por favor, intenta de nuevo.');
     } finally {
-      setIsLoading(false); // Ocultar estado de carga
+      setIsLoading(false);
     }
   };
 
@@ -145,16 +144,20 @@ export default function SolicitarPage() {
             </select>
           </div>
 
-          {/* Botón de Envío con estado de carga */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 px-4 bg-yellow-400 text-gray-900 font-bold text-lg rounded-lg shadow-xl hover:bg-yellow-300 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={isLoading} className="w-full py-3 px-4 bg-yellow-400 text-gray-900 font-bold text-lg rounded-lg shadow-xl hover:bg-yellow-300 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed">
             {isLoading ? 'Enviando...' : 'Solicitar Servicio Ahora'}
           </button>
         </form>
       </div>
     </section>
+  );
+}
+
+// Página principal que envuelve el formulario en Suspense
+export default function SolicitarPage() {
+  return (
+    <Suspense fallback={<p className="text-center text-white mt-10">Cargando formulario...</p>}>
+      <SolicitarForm />
+    </Suspense>
   );
 }
